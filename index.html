@@ -1,0 +1,2903 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>DARTS SCORE SYSTEM</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
+
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:#080808;
+  color:#fff;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+
+button,input{
+  font-family:inherit;
+}
+
+.screen{
+  display:none;
+  width:100%;
+  height:100%;
+}
+
+.screen.active{
+  display:flex;
+}
+
+/* =========================
+   START
+========================= */
+
+#startScreen{
+  width:100%;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  padding:20px;
+  background:
+    radial-gradient(circle,#222 0%,#080808 65%);
+}
+
+.logo{
+  font-size:clamp(35px,9vw,65px);
+  font-weight:900;
+  letter-spacing:6px;
+  margin-bottom:35px;
+}
+
+.roomInput{
+  width:min(500px,90vw);
+  padding:17px;
+  border:2px solid #444;
+  border-radius:12px;
+  background:#151515;
+  color:#fff;
+  text-align:center;
+  font-size:20px;
+  outline:none;
+  margin-bottom:18px;
+}
+
+.modeButtons{
+  display:flex;
+  gap:15px;
+  width:min(500px,90vw);
+}
+
+.modeButton{
+  flex:1;
+  min-height:90px;
+  border:2px solid #444;
+  border-radius:15px;
+  background:#181818;
+  color:#fff;
+  font-size:27px;
+  font-weight:900;
+  transition:.08s;
+}
+
+.modeButton:active,
+.modeButton.pressed{
+  transform:scale(.93);
+  background:#555;
+  border-color:#fff;
+}
+
+/* =========================
+   INPUT
+========================= */
+
+#inputScreen{
+  position:relative;
+  flex-direction:column;
+  background:#050505;
+}
+
+.inputHeader{
+  height:68px;
+  flex-shrink:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#0c0c0c;
+  border-bottom:1px solid #252525;
+  z-index:20;
+}
+
+.currentPlayer{
+  font-size:clamp(21px,5vw,34px);
+  font-weight:900;
+}
+
+.headerButton{
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  padding:9px 13px;
+  border:1px solid #444;
+  border-radius:9px;
+  background:#151515;
+  color:#fff;
+  font-weight:700;
+}
+
+.headerButton:active{
+  background:#555;
+}
+
+#menuButton{left:12px}
+#backButton{right:12px}
+
+/* =========================
+   TURN INFO
+========================= */
+
+.throwInfo{
+  position:absolute;
+  top:78px;
+  z-index:30;
+  pointer-events:none;
+}
+
+#turnInfo{
+  left:15px;
+}
+
+#throwInfo{
+  right:15px;
+  text-align:right;
+}
+
+.infoLabel{
+  display:block;
+  color:#aaa;
+  font-size:13px;
+  font-weight:700;
+}
+
+.infoNumber{
+  display:block;
+  font-size:clamp(42px,11vw,80px);
+  line-height:.95;
+  font-weight:1000;
+}
+
+/* =========================
+   BOARD
+========================= */
+
+.boardArea{
+  position:relative;
+  flex:1;
+  min-height:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:20px 10px 10px;
+}
+
+#dartboard{
+  width:min(94vw,calc(100vh - 110px));
+  height:min(94vw,calc(100vh - 110px));
+  max-width:900px;
+  max-height:900px;
+  touch-action:none;
+  user-select:none;
+  filter:drop-shadow(0 10px 25px rgba(0,0,0,.8));
+}
+
+#hitMarkers{
+  pointer-events:none;
+}
+
+.hitMarker{
+  animation:markerAppear .15s ease-out;
+}
+
+@keyframes markerAppear{
+  from{opacity:0;transform:scale(.3)}
+  to{opacity:1;transform:scale(1)}
+}
+
+.hitOuter{
+  fill:rgba(255,255,255,.08);
+  stroke:#fff;
+  stroke-width:2;
+}
+
+.hitDot{
+  fill:#fff;
+  stroke:#111;
+  stroke-width:2;
+}
+
+/* =========================
+   INPUT SCORE EFFECT
+========================= */
+
+#scoreEffects{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  overflow:hidden;
+}
+
+.scoreEffect{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%) scale(.4);
+  font-size:clamp(50px,14vw,110px);
+  font-weight:1000;
+  text-shadow:0 0 15px rgba(255,255,255,.6);
+  animation:scorePop .75s ease-out forwards;
+}
+
+.scoreEffect.bull{
+  color:#ffd84d;
+}
+
+.scoreEffect.bust{
+  color:#ff5555;
+}
+
+@keyframes scorePop{
+  0%{
+    opacity:0;
+    transform:translate(-50%,-50%) scale(.35);
+  }
+  20%{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(1.15);
+  }
+  45%{
+    opacity:1;
+    transform:translate(-50%,-58%) scale(1);
+  }
+  100%{
+    opacity:0;
+    transform:translate(-50%,-100%) scale(.9);
+  }
+}
+
+/* =========================
+   MENU
+========================= */
+
+#inputMenu{
+  position:fixed;
+  inset:0;
+  display:none;
+  justify-content:center;
+  align-items:center;
+  background:rgba(0,0,0,.8);
+  z-index:100;
+}
+
+#inputMenu.active{
+  display:flex;
+}
+
+.menuPanel{
+  width:min(500px,90vw);
+  max-height:90vh;
+  overflow:auto;
+  padding:24px;
+  background:#151515;
+  border:1px solid #444;
+  border-radius:18px;
+}
+
+.menuTitle{
+  text-align:center;
+  font-size:26px;
+  font-weight:900;
+  margin-bottom:20px;
+}
+
+.menuSection{
+  margin-bottom:22px;
+}
+
+.menuSectionTitle{
+  color:#aaa;
+  font-size:14px;
+  margin-bottom:9px;
+}
+
+.menuAction{
+  width:100%;
+  padding:14px;
+  margin-bottom:8px;
+  border:1px solid #444;
+  border-radius:10px;
+  background:#242424;
+  color:#fff;
+  font-weight:800;
+}
+
+.menuAction:active{
+  background:#555;
+}
+
+.turnSetting{
+  width:100%;
+  padding:13px;
+  background:#202020;
+  border:1px solid #444;
+  border-radius:9px;
+  color:#fff;
+  font-size:18px;
+}
+
+.playerRow{
+  display:flex;
+  gap:8px;
+  margin-bottom:8px;
+}
+
+.playerRow span{
+  flex:1;
+  padding:12px;
+  background:#202020;
+  border-radius:8px;
+}
+
+.playerDelete{
+  width:50px;
+  background:#3a1515;
+  color:#fff;
+  border:1px solid #713333;
+  border-radius:8px;
+}
+
+.closeMenu{
+  width:100%;
+  padding:14px;
+  border:0;
+  border-radius:10px;
+  background:#fff;
+  color:#000;
+  font-weight:900;
+}
+
+/* =========================
+   OUTPUT
+========================= */
+
+#outputScreen{
+  flex-direction:column;
+  background:#080808;
+}
+
+.outputHeader{
+  height:90px;
+  flex-shrink:0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 25px;
+  border-bottom:1px solid #292929;
+}
+
+.outputTitle{
+  font-size:clamp(20px,5vw,34px);
+  font-weight:900;
+}
+
+.outputCurrent{
+  text-align:right;
+}
+
+.outputCurrentName{
+  color:#aaa;
+}
+
+.outputCurrentScore{
+  font-size:clamp(35px,8vw,65px);
+  font-weight:1000;
+}
+
+/* =========================
+   PLAYER CHANGE
+========================= */
+
+#playerChange{
+  position:fixed;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+  z-index:80;
+  opacity:0;
+}
+
+#playerChange.show{
+  animation:playerChangeAnim 1.4s ease-out;
+}
+
+.playerChangeText{
+  padding:22px 38px;
+  border:2px solid #ffd400;
+  border-radius:15px;
+  background:rgba(0,0,0,.88);
+  color:#ffd400;
+  font-size:clamp(30px,8vw,70px);
+  font-weight:1000;
+  letter-spacing:3px;
+  box-shadow:
+    0 0 25px rgba(255,212,0,.4);
+}
+
+@keyframes playerChangeAnim{
+  0%{opacity:0;transform:scale(.7)}
+  15%{opacity:1;transform:scale(1.05)}
+  35%{opacity:1;transform:scale(1)}
+  100%{opacity:0;transform:scale(1.05)}
+}
+
+/* =========================
+   LAST SCORE
+========================= */
+
+.outputLast{
+  height:100px;
+  flex-shrink:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  border-bottom:1px solid #222;
+}
+
+.outputLastLabel{
+  color:#888;
+  font-size:13px;
+}
+
+.outputLastScore{
+  font-size:38px;
+  font-weight:900;
+}
+
+/* =========================
+   OUTPUT PLAYERS
+========================= */
+
+.playerList{
+  flex:1;
+  overflow-y:auto;
+  padding:15px;
+}
+
+.outputPlayer{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:19px 20px;
+  margin-bottom:10px;
+  background:#151515;
+  border:1px solid #292929;
+  border-radius:14px;
+  transition:.2s;
+}
+
+.outputPlayer.current{
+  border-color:#ffd400;
+  background:#26230e;
+  box-shadow:
+    0 0 8px rgba(255,212,0,.65),
+    0 0 24px rgba(255,212,0,.3),
+    inset 0 0 15px rgba(255,212,0,.08);
+}
+
+.outputPlayerName{
+  font-size:20px;
+  font-weight:800;
+}
+
+.turnScore{
+  margin-left:auto;
+  margin-right:20px;
+  color:rgba(255,255,255,.48);
+  font-size:20px;
+  font-weight:700;
+}
+
+.outputPlayerScore{
+  min-width:70px;
+  text-align:right;
+  font-size:34px;
+  font-weight:1000;
+}
+
+/* =========================
+   OUTPUT SCORE EFFECT
+========================= */
+
+#outputEffects{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  overflow:hidden;
+  z-index:70;
+}
+
+.outputScoreEffect{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%) scale(.3);
+  font-size:clamp(60px,17vw,140px);
+  font-weight:1000;
+  color:#fff;
+  text-shadow:
+    0 0 10px #fff,
+    0 0 30px rgba(255,255,255,.6);
+  animation:outputScoreAnim .9s ease-out forwards;
+}
+
+@keyframes outputScoreAnim{
+  0%{
+    opacity:0;
+    transform:translate(-50%,-50%) scale(.3);
+  }
+  18%{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(1.25);
+  }
+  40%{
+    transform:translate(-50%,-50%) scale(1);
+  }
+  100%{
+    opacity:0;
+    transform:translate(-50%,-100%) scale(.9);
+  }
+}
+
+@media(orientation:landscape){
+  #dartboard{
+    width:min(75vh,75vw);
+    height:min(75vh,75vw);
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- =====================================================
+     START
+===================================================== -->
+
+<div id="startScreen">
+
+  <div class="logo">DARTS</div>
+
+  <input
+    id="roomName"
+    class="roomInput"
+    placeholder="ROOM NAME"
+    autocomplete="off"
+  >
+
+  <div class="modeButtons">
+
+    <button
+      id="inputModeButton"
+      class="modeButton"
+      type="button">
+      INPUT
+    </button>
+
+    <button
+      id="outputModeButton"
+      class="modeButton"
+      type="button">
+      OUTPUT
+    </button>
+
+  </div>
+</div>
+
+
+<!-- =====================================================
+     INPUT
+===================================================== -->
+
+<div id="inputScreen" class="screen">
+
+  <div class="inputHeader">
+
+    <button
+      id="menuButton"
+      class="headerButton"
+      type="button">
+      MENU
+    </button>
+
+    <div
+      id="currentPlayer"
+      class="currentPlayer">
+      PLAYER 1
+    </div>
+
+    <button
+      id="backButton"
+      class="headerButton"
+      type="button">
+      BACK
+    </button>
+
+  </div>
+
+
+  <div
+    id="turnInfo"
+    class="throwInfo">
+
+    <span class="infoLabel">
+      REMAINING TURNS
+    </span>
+
+    <span
+      id="remainingTurns"
+      class="infoNumber">
+      10
+    </span>
+
+  </div>
+
+
+  <div
+    id="throwInfo"
+    class="throwInfo">
+
+    <span class="infoLabel">
+      REMAINING THROWS
+    </span>
+
+    <span
+      id="remainingThrows"
+      class="infoNumber">
+      3
+    </span>
+
+  </div>
+
+
+  <div class="boardArea">
+
+    <svg
+      id="dartboard"
+      viewBox="0 0 220 220">
+
+      <circle
+        cx="110"
+        cy="110"
+        r="106"
+        fill="#111"
+        stroke="#777"
+        stroke-width="2"
+      />
+
+      <g id="boardSegments"></g>
+      <g id="boardNumbers"></g>
+      <g id="hitMarkers"></g>
+
+    </svg>
+
+    <div id="scoreEffects"></div>
+
+  </div>
+
+</div>
+
+
+<!-- =====================================================
+     INPUT MENU
+===================================================== -->
+
+<div id="inputMenu">
+
+  <div class="menuPanel">
+
+    <div class="menuTitle">
+      GAME MENU
+    </div>
+
+    <div class="menuSection">
+
+      <div class="menuSectionTitle">
+        TURN LIMIT
+      </div>
+
+      <input
+        id="turnLimitInput"
+        class="turnSetting"
+        type="number"
+        min="1"
+        max="999"
+        value="10"
+      >
+
+      <button
+        id="applyTurnLimit"
+        class="menuAction"
+        type="button">
+        APPLY TURN LIMIT
+      </button>
+
+    </div>
+
+
+    <div class="menuSection">
+
+      <div class="menuSectionTitle">
+        PLAYERS
+      </div>
+
+      <div id="playerMenuList"></div>
+
+      <button
+        id="addPlayerButton"
+        class="menuAction"
+        type="button">
+        ＋ PLAYER
+      </button>
+
+    </div>
+
+
+    <button
+      id="resetButton"
+      class="menuAction"
+      type="button">
+      RESET GAME
+    </button>
+
+    <button
+      id="closeMenuButton"
+      class="closeMenu"
+      type="button">
+      CLOSE
+    </button>
+
+  </div>
+</div>
+
+
+<!-- =====================================================
+     OUTPUT
+===================================================== -->
+
+<div id="outputScreen" class="screen">
+
+  <div class="outputHeader">
+
+    <div class="outputTitle">
+      DARTS SCORE
+    </div>
+
+    <div class="outputCurrent">
+
+      <div
+        id="outputCurrentName"
+        class="outputCurrentName">
+        PLAYER 1
+      </div>
+
+      <div
+        id="outputCurrentScore"
+        class="outputCurrentScore">
+        501
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div class="outputLast">
+
+    <div class="outputLastLabel">
+      LAST SCORE
+    </div>
+
+    <div
+      id="outputLastScore"
+      class="outputLastScore">
+      -
+    </div>
+
+  </div>
+
+
+  <div
+    id="outputPlayerList"
+    class="playerList">
+  </div>
+
+</div>
+
+
+<!-- PLAYER CHANGE -->
+
+<div id="playerChange">
+  <div class="playerChangeText">
+    PLAYER CHANGE
+  </div>
+</div>
+
+
+<!-- OUTPUT EFFECT -->
+
+<div id="outputEffects"></div>
+
+
+<!-- =====================================================
+     MAIN JAVASCRIPT
+===================================================== -->
+
+<script>
+
+"use strict";
+
+
+/* =====================================================
+   DOM
+===================================================== */
+
+const startScreen =
+  document.getElementById("startScreen");
+
+const inputScreen =
+  document.getElementById("inputScreen");
+
+const outputScreen =
+  document.getElementById("outputScreen");
+
+const roomInput =
+  document.getElementById("roomName");
+
+const inputButton =
+  document.getElementById("inputModeButton");
+
+const outputButton =
+  document.getElementById("outputModeButton");
+
+const currentPlayerElement =
+  document.getElementById("currentPlayer");
+
+const remainingTurnsElement =
+  document.getElementById("remainingTurns");
+
+const remainingThrowsElement =
+  document.getElementById("remainingThrows");
+
+const dartboard =
+  document.getElementById("dartboard");
+
+const boardSegments =
+  document.getElementById("boardSegments");
+
+const boardNumbers =
+  document.getElementById("boardNumbers");
+
+const hitMarkers =
+  document.getElementById("hitMarkers");
+
+const scoreEffects =
+  document.getElementById("scoreEffects");
+
+const outputEffects =
+  document.getElementById("outputEffects");
+
+const outputCurrentName =
+  document.getElementById("outputCurrentName");
+
+const outputCurrentScore =
+  document.getElementById("outputCurrentScore");
+
+const outputLastScore =
+  document.getElementById("outputLastScore");
+
+const outputPlayerList =
+  document.getElementById("outputPlayerList");
+
+const playerChange =
+  document.getElementById("playerChange");
+
+
+/* =====================================================
+   GAME VARIABLES
+===================================================== */
+
+let mode = "";
+
+let roomName = "";
+
+let players = [
+  {
+    id:"p1",
+    name:"PLAYER 1",
+    score:501,
+    turnScore:0
+  }
+];
+
+let currentPlayerIndex = 0;
+
+let throwNumber = 0;
+
+let currentTurn = 1;
+
+let maxTurns = 10;
+
+let gameFinished = false;
+
+
+/* =====================================================
+   BOARD
+===================================================== */
+
+const CX = 110;
+const CY = 110;
+
+/*
+  見た目は前のデザイン。
+  判定領域だけ広め。
+*/
+
+const BULL_RADIUS = 10;
+const OUTER_BULL_RADIUS = 20;
+
+const TRIPLE_INNER = 43;
+const TRIPLE_OUTER = 50;
+
+const DOUBLE_INNER = 94;
+const DOUBLE_OUTER = 106;
+
+const NUMBERS = [
+  20,1,18,4,13,
+  6,10,15,2,17,
+  3,19,7,16,8,
+  11,14,9,12,5
+];
+
+
+function point(r,a){
+
+  return {
+    x:CX+r*Math.cos(a),
+    y:CY+r*Math.sin(a)
+  };
+
+}
+
+
+function arcPath(r1,r2,a1,a2){
+
+  const p1=point(r1,a1);
+  const p2=point(r2,a1);
+  const p3=point(r2,a2);
+  const p4=point(r1,a2);
+
+  const large =
+    a2-a1>Math.PI ? 1 : 0;
+
+  return `
+    M ${p1.x} ${p1.y}
+    L ${p2.x} ${p2.y}
+    A ${r2} ${r2} 0 ${large} 1 ${p3.x} ${p3.y}
+    L ${p4.x} ${p4.y}
+    A ${r1} ${r1} 0 ${large} 0 ${p1.x} ${p1.y}
+    Z
+  `;
+
+}
+
+
+function buildDartboard(){
+
+  boardSegments.innerHTML="";
+  boardNumbers.innerHTML="";
+  hitMarkers.innerHTML="";
+
+
+  const start =
+    -Math.PI/2-Math.PI/20;
+
+
+  for(let i=0;i<20;i++){
+
+    const a1 =
+      start+i*Math.PI*2/20;
+
+    const a2 =
+      start+(i+1)*Math.PI*2/20;
+
+
+    /*
+      SINGLE
+    */
+
+    const single =
+      document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "path"
+      );
+
+    single.setAttribute(
+      "d",
+      arcPath(
+        OUTER_BULL_RADIUS,
+        DOUBLE_INNER,
+        a1,
+        a2
+      )
+    );
+
+    single.setAttribute(
+      "fill",
+      i%2===0
+        ? "#f0f0f0"
+        : "#171717"
+    );
+
+    single.setAttribute(
+      "stroke",
+      "#666"
+    );
+
+    single.setAttribute(
+      "stroke-width",
+      ".8"
+    );
+
+    boardSegments.appendChild(single);
+
+
+    /*
+      TRIPLE
+      前の見た目
+    */
+
+    const triple =
+      document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "path"
+      );
+
+    triple.setAttribute(
+      "d",
+      arcPath(
+        TRIPLE_INNER,
+        TRIPLE_OUTER,
+        a1,
+        a2
+      )
+    );
+
+    triple.setAttribute(
+      "fill",
+      i%2===0
+        ? "#b51d1d"
+        : "#159447"
+    );
+
+    triple.setAttribute(
+      "stroke",
+      "#111"
+    );
+
+    triple.setAttribute(
+      "stroke-width",
+      "1"
+    );
+
+    boardSegments.appendChild(triple);
+
+
+    /*
+      DOUBLE
+    */
+
+    const dbl =
+      document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "path"
+      );
+
+    dbl.setAttribute(
+      "d",
+      arcPath(
+        DOUBLE_INNER,
+        DOUBLE_OUTER,
+        a1,
+        a2
+      )
+    );
+
+    dbl.setAttribute(
+      "fill",
+      i%2===0
+        ? "#b51d1d"
+        : "#159447"
+    );
+
+    dbl.setAttribute(
+      "stroke",
+      "#111"
+    );
+
+    dbl.setAttribute(
+      "stroke-width",
+      "1"
+    );
+
+    boardSegments.appendChild(dbl);
+
+
+    /*
+      NUMBER
+    */
+
+    const angle =
+      (a1+a2)/2;
+
+    const np =
+      point(115,angle);
+
+    const text =
+      document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "text"
+      );
+
+    text.setAttribute("x",np.x);
+    text.setAttribute("y",np.y);
+    text.setAttribute("fill","#fff");
+    text.setAttribute("font-size","9");
+    text.setAttribute("font-weight","900");
+    text.setAttribute("text-anchor","middle");
+    text.setAttribute("dominant-baseline","middle");
+
+    text.textContent=NUMBERS[i];
+
+    boardNumbers.appendChild(text);
+
+  }
+
+
+  /*
+    OUTER BULL
+  */
+
+  const outerBull =
+    document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "circle"
+    );
+
+  outerBull.setAttribute("cx",CX);
+  outerBull.setAttribute("cy",CY);
+  outerBull.setAttribute("r",OUTER_BULL_RADIUS);
+  outerBull.setAttribute("fill","#159447");
+  outerBull.setAttribute("stroke","#111");
+
+  boardSegments.appendChild(outerBull);
+
+
+  /*
+    BULL
+  */
+
+  const bull =
+    document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "circle"
+    );
+
+  bull.setAttribute("cx",CX);
+  bull.setAttribute("cy",CY);
+  bull.setAttribute("r",BULL_RADIUS);
+  bull.setAttribute("fill","#b51d1d");
+  bull.setAttribute("stroke","#111");
+
+  boardSegments.appendChild(bull);
+
+}
+
+
+/* =====================================================
+   START
+===================================================== */
+
+function buttonFeedback(button){
+
+  button.classList.add("pressed");
+
+  setTimeout(
+    ()=>button.classList.remove("pressed"),
+    180
+  );
+
+}
+
+
+inputButton.addEventListener(
+  "pointerdown",
+  ()=>{
+    buttonFeedback(inputButton);
+  }
+);
+
+outputButton.addEventListener(
+  "pointerdown",
+  ()=>{
+    buttonFeedback(outputButton);
+  }
+);
+
+
+inputButton.addEventListener(
+  "click",
+  ()=>{
+    startGame("input");
+  }
+);
+
+
+outputButton.addEventListener(
+  "click",
+  ()=>{
+    startGame("output");
+  }
+);
+
+
+function startGame(selectedMode){
+
+  roomName =
+    roomInput.value.trim();
+
+
+  if(!roomName){
+
+    roomInput.focus();
+
+    roomInput.style.borderColor="#f44";
+
+    setTimeout(
+      ()=>{
+        roomInput.style.borderColor="#444";
+      },
+      500
+    );
+
+    return;
+
+  }
+
+
+  mode=selectedMode;
+
+  startScreen.style.display="none";
+
+
+  if(mode==="input"){
+
+    inputScreen.classList.add("active");
+
+    outputScreen.classList.remove("active");
+
+    buildDartboard();
+
+  }
+  else{
+
+    outputScreen.classList.add("active");
+
+    inputScreen.classList.remove("active");
+
+  }
+
+
+  updateAll();
+
+
+  if(window.startFirebaseSync){
+
+    window.startFirebaseSync(
+      roomName,
+      mode
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   BOARD TAP
+===================================================== */
+
+dartboard.addEventListener(
+  "pointerdown",
+  event=>{
+
+    if(
+      mode!=="input" ||
+      gameFinished
+    ){
+      return;
+    }
+
+
+    const rect =
+      dartboard.getBoundingClientRect();
+
+
+    const x =
+      (event.clientX-rect.left)
+      *220/rect.width;
+
+    const y =
+      (event.clientY-rect.top)
+      *220/rect.height;
+
+
+    const dx=x-CX;
+    const dy=y-CY;
+
+    const radius =
+      Math.sqrt(dx*dx+dy*dy);
+
+
+    let angle =
+      Math.atan2(dy,dx)+Math.PI/2;
+
+
+    if(angle<0)
+      angle+=Math.PI*2;
+
+
+    let index =
+      Math.floor(
+        angle/(Math.PI*2/20)
+      );
+
+
+    index =
+      (index+20)%20;
+
+
+    const number=NUMBERS[index];
+
+
+    let score=0;
+    let label="MISS";
+
+
+    if(radius<=BULL_RADIUS){
+
+      score=50;
+      label="BULL";
+
+    }
+    else if(radius<=OUTER_BULL_RADIUS){
+
+      score=25;
+      label="OUTER BULL";
+
+    }
+    else if(
+      radius>=TRIPLE_INNER &&
+      radius<=TRIPLE_OUTER
+    ){
+
+      score=number*3;
+      label="TRIPLE "+number;
+
+    }
+    else if(
+      radius>=DOUBLE_INNER &&
+      radius<=DOUBLE_OUTER
+    ){
+
+      score=number*2;
+      label="DOUBLE "+number;
+
+    }
+    else if(radius<=DOUBLE_OUTER){
+
+      score=number;
+      label="SINGLE "+number;
+
+    }
+
+
+    addHitMarker(x,y);
+
+    showInputScoreEffect(
+      score,
+      label
+    );
+
+    processThrow(
+      score,
+      label
+    );
+
+  }
+);
+
+
+/* =====================================================
+   HIT MARKER
+===================================================== */
+
+function addHitMarker(x,y){
+
+  const g =
+    document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "g"
+    );
+
+  g.classList.add("hitMarker");
+
+
+  const outer =
+    document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "circle"
+    );
+
+  outer.setAttribute("cx",x);
+  outer.setAttribute("cy",y);
+  outer.setAttribute("r",5);
+  outer.classList.add("hitOuter");
+
+
+  const dot =
+    document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "circle"
+    );
+
+  dot.setAttribute("cx",x);
+  dot.setAttribute("cy",y);
+  dot.setAttribute("r",2);
+  dot.classList.add("hitDot");
+
+
+  g.appendChild(outer);
+  g.appendChild(dot);
+
+  hitMarkers.appendChild(g);
+
+}
+
+
+function clearHitMarkers(){
+
+  hitMarkers.innerHTML="";
+
+}
+
+
+/* =====================================================
+   INPUT SCORE EFFECT
+===================================================== */
+
+function showInputScoreEffect(
+  score,
+  label
+){
+
+  const el =
+    document.createElement("div");
+
+  el.className="scoreEffect";
+
+
+  if(
+    label==="BULL" ||
+    label==="OUTER BULL"
+  ){
+
+    el.classList.add("bull");
+
+  }
+
+
+  if(label==="BUST"){
+
+    el.classList.add("bust");
+
+  }
+
+
+  if(label==="MISS"){
+
+    el.textContent="MISS";
+
+  }
+  else if(label==="BUST"){
+
+    el.textContent="BUST";
+
+  }
+  else{
+
+    el.textContent="+"+score;
+
+  }
+
+
+  scoreEffects.appendChild(el);
+
+
+  setTimeout(
+    ()=>el.remove(),
+    850
+  );
+
+}
+
+
+/* =====================================================
+   GAME LOGIC
+===================================================== */
+
+function processThrow(
+  score,
+  label
+){
+
+  const player =
+    players[currentPlayerIndex];
+
+
+  if(!player)
+    return;
+
+
+  const before=player.score;
+
+  const after=before-score;
+
+
+  let bust=false;
+
+
+  if(
+    after<0 ||
+    after===1
+  ){
+
+    bust=true;
+
+  }
+
+
+  if(after===0){
+
+    const valid =
+      label.startsWith("DOUBLE ") ||
+      label==="BULL";
+
+    if(!valid)
+      bust=true;
+
+  }
+
+
+  if(!bust){
+
+    player.score=after;
+
+    player.turnScore += score;
+
+  }
+
+
+  throwNumber++;
+
+
+  const finishedByScore =
+    player.score===0;
+
+
+  const finishedByThrows =
+    throwNumber>=3;
+
+
+  /*
+    そのターン終了
+  */
+
+  if(
+    finishedByScore ||
+    finishedByThrows ||
+    bust
+  ){
+
+    finishTurn(
+      bust
+    );
+
+  }
+
+
+  updateAll();
+
+
+  if(window.firebaseUpdateThrow){
+
+    window.firebaseUpdateThrow({
+
+      players,
+      currentPlayerIndex,
+      throwNumber,
+      currentTurn,
+      maxTurns,
+      lastScore:
+        bust ? 0 : score,
+      lastLabel:
+        bust ? "BUST" : label,
+      gameFinished
+
+    });
+
+  }
+
+}
+
+
+/* =====================================================
+   FINISH TURN
+===================================================== */
+
+function finishTurn(bust){
+
+  /*
+    得点で終了
+  */
+
+  if(
+    players[currentPlayerIndex].score===0
+  ){
+
+    gameFinished=true;
+
+    return;
+
+  }
+
+
+  /*
+    ターン上限
+  */
+
+  if(currentTurn>=maxTurns){
+
+    gameFinished=true;
+
+    return;
+
+  }
+
+
+  /*
+    次プレイヤー
+  */
+
+  setTimeout(
+    ()=>{
+
+      currentPlayerIndex =
+        (
+          currentPlayerIndex+1
+        )%players.length;
+
+
+      /*
+        全プレイヤーを一巡したら
+        次のターン
+      */
+
+      if(currentPlayerIndex===0){
+
+        currentTurn++;
+
+      }
+
+
+      throwNumber=0;
+
+      players[
+        currentPlayerIndex
+      ].turnScore=0;
+
+
+      clearHitMarkers();
+
+      updateAll();
+
+
+      if(window.firebasePlayerChange){
+
+        window.firebasePlayerChange({
+
+          currentPlayerIndex,
+          currentTurn,
+          throwNumber
+
+        });
+
+      }
+
+    },
+    400
+  );
+
+}
+
+
+/* =====================================================
+   UPDATE
+===================================================== */
+
+function updateAll(){
+
+  if(!players.length)
+    return;
+
+
+  const current =
+    players[currentPlayerIndex];
+
+
+  if(!current)
+    return;
+
+
+  currentPlayerElement.textContent =
+    current.name;
+
+
+  remainingThrowsElement.textContent =
+    Math.max(
+      0,
+      3-throwNumber
+    );
+
+
+  remainingTurnsElement.textContent =
+    Math.max(
+      0,
+      maxTurns-currentTurn+1
+    );
+
+
+  outputCurrentName.textContent =
+    current.name;
+
+  outputCurrentScore.textContent =
+    current.score;
+
+
+  renderOutputPlayers();
+
+  renderPlayerMenu();
+
+}
+
+
+/* =====================================================
+   OUTPUT PLAYER LIST
+===================================================== */
+
+function renderOutputPlayers(){
+
+  outputPlayerList.innerHTML="";
+
+
+  players.forEach(
+    (player,index)=>{
+
+      const row =
+        document.createElement("div");
+
+      row.className="outputPlayer";
+
+
+      if(index===currentPlayerIndex){
+
+        row.classList.add("current");
+
+      }
+
+
+      const name =
+        document.createElement("div");
+
+      name.className="outputPlayerName";
+
+      name.textContent=player.name;
+
+
+      const turnScore =
+        document.createElement("div");
+
+      turnScore.className="turnScore";
+
+      turnScore.textContent =
+        player.turnScore>0
+          ? "+"+player.turnScore
+          : "";
+
+
+      const score =
+        document.createElement("div");
+
+      score.className="outputPlayerScore";
+
+      score.textContent=player.score;
+
+
+      row.appendChild(name);
+      row.appendChild(turnScore);
+      row.appendChild(score);
+
+
+      outputPlayerList.appendChild(row);
+
+    }
+  );
+
+}
+
+
+/* =====================================================
+   OUTPUT SCORE EFFECT
+===================================================== */
+
+function showOutputScoreEffect(
+  score
+){
+
+  if(!score || score<=0)
+    return;
+
+
+  const el =
+    document.createElement("div");
+
+  el.className="outputScoreEffect";
+
+  el.textContent="+"+score;
+
+  outputEffects.appendChild(el);
+
+
+  setTimeout(
+    ()=>el.remove(),
+    1000
+  );
+
+}
+
+
+/* =====================================================
+   PLAYER CHANGE EFFECT
+===================================================== */
+
+function showPlayerChange(){
+
+  playerChange.classList.remove("show");
+
+  /*
+    animation restart
+  */
+
+  void playerChange.offsetWidth;
+
+  playerChange.classList.add("show");
+
+}
+
+
+/* =====================================================
+   MENU
+===================================================== */
+
+document
+  .getElementById("menuButton")
+  .addEventListener(
+    "click",
+    ()=>{
+      document
+        .getElementById("inputMenu")
+        .classList.add("active");
+    }
+  );
+
+
+document
+  .getElementById("closeMenuButton")
+  .addEventListener(
+    "click",
+    ()=>{
+      document
+        .getElementById("inputMenu")
+        .classList.remove("active");
+    }
+  );
+
+
+document
+  .getElementById("backButton")
+  .addEventListener(
+    "click",
+    ()=>{
+      location.reload();
+    }
+  );
+
+
+/* =====================================================
+   TURN LIMIT
+===================================================== */
+
+document
+  .getElementById("applyTurnLimit")
+  .addEventListener(
+    "click",
+    ()=>{
+
+      let value =
+        parseInt(
+          document.getElementById(
+            "turnLimitInput"
+          ).value
+        );
+
+
+      if(
+        !Number.isFinite(value) ||
+        value<1
+      ){
+
+        value=10;
+
+      }
+
+
+      maxTurns=value;
+
+      currentTurn=1;
+
+      throwNumber=0;
+
+      gameFinished=false;
+
+
+      updateAll();
+
+
+      if(window.firebaseSetTurnLimit){
+
+        window.firebaseSetTurnLimit(
+          maxTurns
+        );
+
+      }
+
+    }
+  );
+
+
+/* =====================================================
+   PLAYERS
+===================================================== */
+
+function renderPlayerMenu(){
+
+  const list =
+    document.getElementById(
+      "playerMenuList"
+    );
+
+  list.innerHTML="";
+
+
+  players.forEach(
+    (player,index)=>{
+
+      const row =
+        document.createElement("div");
+
+      row.className="playerRow";
+
+
+      const name =
+        document.createElement("span");
+
+      name.textContent=player.name;
+
+
+      const del =
+        document.createElement("button");
+
+      del.className="playerDelete";
+      del.type="button";
+      del.textContent="×";
+
+
+      del.addEventListener(
+        "click",
+        ()=>{
+
+          if(players.length<=1)
+            return;
+
+
+          players.splice(
+            index,
+            1
+          );
+
+
+          if(
+            currentPlayerIndex>=
+            players.length
+          ){
+
+            currentPlayerIndex=0;
+
+          }
+
+
+          throwNumber=0;
+
+          clearHitMarkers();
+
+          updateAll();
+
+
+          if(window.firebaseReplacePlayers){
+
+            window.firebaseReplacePlayers(
+              players,
+              currentPlayerIndex
+            );
+
+          }
+
+        }
+      );
+
+
+      row.appendChild(name);
+      row.appendChild(del);
+
+      list.appendChild(row);
+
+    }
+  );
+
+}
+
+
+document
+  .getElementById("addPlayerButton")
+  .addEventListener(
+    "click",
+    ()=>{
+
+      const number =
+        players.length+1;
+
+
+      players.push({
+
+        id:
+          "p"+Date.now(),
+
+        name:
+          "PLAYER "+number,
+
+        score:
+          501,
+
+        turnScore:
+          0
+
+      });
+
+
+      updateAll();
+
+
+      if(window.firebaseReplacePlayers){
+
+        window.firebaseReplacePlayers(
+          players,
+          currentPlayerIndex
+        );
+
+      }
+
+    }
+  );
+
+
+/* =====================================================
+   RESET
+===================================================== */
+
+document
+  .getElementById("resetButton")
+  .addEventListener(
+    "click",
+    ()=>{
+
+      players =
+        players.map(
+          p=>({
+
+            id:p.id,
+            name:p.name,
+            score:501,
+            turnScore:0
+
+          })
+        );
+
+
+      currentPlayerIndex=0;
+
+      throwNumber=0;
+
+      currentTurn=1;
+
+      gameFinished=false;
+
+      clearHitMarkers();
+
+      updateAll();
+
+
+      if(window.firebaseResetGame){
+
+        window.firebaseResetGame(
+          players,
+          maxTurns
+        );
+
+      }
+
+    }
+  );
+
+
+/* =====================================================
+   FIREBASE STATE RECEIVER
+===================================================== */
+
+window.applyFirebaseState =
+  function(data){
+
+    if(!data)
+      return;
+
+
+    if(Array.isArray(data.players)){
+
+      players=data.players;
+
+    }
+
+
+    if(
+      typeof data.currentPlayerIndex
+      ==="number"
+    ){
+
+      currentPlayerIndex =
+        data.currentPlayerIndex;
+
+    }
+
+
+    if(
+      typeof data.throwNumber
+      ==="number"
+    ){
+
+      throwNumber=
+        data.throwNumber;
+
+    }
+
+
+    if(
+      typeof data.currentTurn
+      ==="number"
+    ){
+
+      currentTurn=
+        data.currentTurn;
+
+    }
+
+
+    if(
+      typeof data.maxTurns
+      ==="number"
+    ){
+
+      maxTurns=
+        data.maxTurns;
+
+      document
+        .getElementById(
+          "turnLimitInput"
+        )
+        .value=maxTurns;
+
+    }
+
+
+    if(data.lastScore!==undefined){
+
+      outputLastScore.textContent =
+        data.lastLabel
+          ? data.lastLabel+
+            "  "+data.lastScore
+          : "-";
+
+    }
+
+
+    if(data.showScoreEffect){
+
+      showOutputScoreEffect(
+        data.lastScore
+      );
+
+    }
+
+
+    if(data.playerChanged){
+
+      showPlayerChange();
+
+    }
+
+
+    updateAll();
+
+  };
+
+
+buildDartboard();
+updateAll();
+
+</script>
+
+
+<!-- =====================================================
+     FIREBASE
+===================================================== -->
+
+<script type="module">
+
+import {
+  initializeApp
+}
+from
+"https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+
+import {
+  getDatabase,
+  ref,
+  onValue,
+  set,
+  update
+}
+from
+"https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
+
+
+const firebaseConfig={
+
+  apiKey:
+    "AIzaSyCh1dS522TL9HjGEkH7tCHXFWfJ0F1Qfx0",
+
+  authDomain:
+    "darts-01.firebaseapp.com",
+
+  databaseURL:
+    "https://darts-01-default-rtdb.asia-southeast1.firebasedatabase.app",
+
+  projectId:
+    "darts-01",
+
+  storageBucket:
+    "darts-01.firebasestorage.app",
+
+  messagingSenderId:
+    "936099490830",
+
+  appId:
+    "1:936099490830:web:bc3b39184138acbd1aa05f",
+
+  measurementId:
+    "G-JTX22B0QZQ"
+
+};
+
+
+const app =
+  initializeApp(
+    firebaseConfig
+  );
+
+const db =
+  getDatabase(app);
+
+
+let roomRef=null;
+
+
+/* =====================================================
+   START SYNC
+===================================================== */
+
+window.startFirebaseSync =
+  function(
+    roomName,
+    mode
+  ){
+
+    roomRef =
+      ref(
+        db,
+        "rooms/"+roomName
+      );
+
+
+    onValue(
+      roomRef,
+      snapshot=>{
+
+        const data =
+          snapshot.val();
+
+
+        if(!data){
+
+          if(mode==="input"){
+
+            set(
+              roomRef,
+              {
+
+                gameType:501,
+
+                maxTurns:10,
+
+                currentTurn:1,
+
+                players:{
+
+                  p1:{
+
+                    name:"PLAYER 1",
+                    score:501,
+                    turnScore:0,
+                    order:0
+
+                  }
+
+                },
+
+                state:{
+
+                  currentPlayerId:"p1",
+
+                  throwNumber:0,
+
+                  lastScore:null,
+
+                  lastLabel:"",
+
+                  playerChanged:false,
+
+                  showScoreEffect:false,
+
+                  finished:false
+
+                }
+
+              }
+            );
+
+          }
+
+          return;
+
+        }
+
+
+        const firebasePlayers=[];
+
+
+        if(data.players){
+
+          Object.entries(
+            data.players
+          )
+          .sort(
+            (a,b)=>
+              (a[1].order||0)-
+              (b[1].order||0)
+          )
+          .forEach(
+            ([id,p])=>{
+
+              firebasePlayers.push({
+
+                id,
+
+                name:p.name,
+
+                score:
+                  typeof p.score==="number"
+                    ?p.score
+                    :501,
+
+                turnScore:
+                  typeof p.turnScore==="number"
+                    ?p.turnScore
+                    :0
+
+              });
+
+            }
+          );
+
+        }
+
+
+        let index=0;
+
+
+        if(
+          data.state &&
+          data.state.currentPlayerId
+        ){
+
+          const found =
+            firebasePlayers.findIndex(
+              p=>
+                p.id===
+                data.state.currentPlayerId
+            );
+
+
+          if(found>=0)
+            index=found;
+
+        }
+
+
+        window.applyFirebaseState({
+
+          players:
+            firebasePlayers,
+
+          currentPlayerIndex:
+            index,
+
+          throwNumber:
+            data.state?.throwNumber||0,
+
+          currentTurn:
+            data.currentTurn||1,
+
+          maxTurns:
+            data.maxTurns||10,
+
+          lastScore:
+            data.state?.lastScore,
+
+          lastLabel:
+            data.state?.lastLabel||"",
+
+          playerChanged:
+            data.state?.playerChanged||false,
+
+          showScoreEffect:
+            data.state?.showScoreEffect||false
+
+        });
+
+
+        /*
+          一度表示したエフェクトフラグを
+          OUTPUT側で消費
+        */
+
+        if(
+          mode==="output" &&
+          data.state?.showScoreEffect
+        ){
+
+          update(
+            roomRef,
+            {
+              "state/showScoreEffect":
+                false
+            }
+          );
+
+        }
+
+
+        if(
+          mode==="output" &&
+          data.state?.playerChanged
+        ){
+
+          update(
+            roomRef,
+            {
+              "state/playerChanged":
+                false
+            }
+          );
+
+        }
+
+      }
+    );
+
+  };
+
+
+/* =====================================================
+   THROW UPDATE
+===================================================== */
+
+window.firebaseUpdateThrow =
+  async function(data){
+
+    if(!roomRef)
+      return;
+
+
+    const updates={};
+
+
+    data.players.forEach(
+      (p,index)=>{
+
+        updates[
+          "players/"+p.id
+        ]={
+
+          name:p.name,
+
+          score:p.score,
+
+          turnScore:p.turnScore,
+
+          order:index
+
+        };
+
+      }
+    );
+
+
+    const current =
+      data.players[
+        data.currentPlayerIndex
+      ];
+
+
+    updates["maxTurns"] =
+      data.maxTurns;
+
+    updates["currentTurn"] =
+      data.currentTurn;
+
+
+    updates[
+      "state/currentPlayerId"
+    ] =
+      current?.id||null;
+
+
+    updates[
+      "state/throwNumber"
+    ] =
+      data.throwNumber;
+
+
+    updates[
+      "state/lastScore"
+    ] =
+      data.lastScore;
+
+
+    updates[
+      "state/lastLabel"
+    ] =
+      data.lastLabel;
+
+
+    updates[
+      "state/playerChanged"
+    ] =
+      false;
+
+
+    updates[
+      "state/showScoreEffect"
+    ] =
+      true;
+
+
+    updates[
+      "state/finished"
+    ] =
+      data.gameFinished;
+
+
+    await update(
+      roomRef,
+      updates
+    );
+
+  };
+
+
+/* =====================================================
+   PLAYER CHANGE
+===================================================== */
+
+window.firebasePlayerChange =
+  async function(data){
+
+    if(!roomRef)
+      return;
+
+
+    const current =
+      players[
+        data.currentPlayerIndex
+      ];
+
+
+    await update(
+      roomRef,
+      {
+
+        currentTurn:
+          data.currentTurn,
+
+        "state/currentPlayerId":
+          current?.id||null,
+
+        "state/throwNumber":
+          data.throwNumber,
+
+        "state/playerChanged":
+          true,
+
+        "state/showScoreEffect":
+          false
+
+      }
+    );
+
+  };
+
+
+/* =====================================================
+   TURN LIMIT
+===================================================== */
+
+window.firebaseSetTurnLimit =
+  async function(limit){
+
+    if(!roomRef)
+      return;
+
+
+    await update(
+      roomRef,
+      {
+
+        maxTurns:
+          limit,
+
+        currentTurn:
+          1,
+
+        "state/throwNumber":
+          0,
+
+        "state/playerChanged":
+          false
+
+      }
+    );
+
+  };
+
+
+/* =====================================================
+   REPLACE PLAYERS
+===================================================== */
+
+window.firebaseReplacePlayers =
+  async function(
+    newPlayers,
+    currentIndex
+  ){
+
+    if(!roomRef)
+      return;
+
+
+    const playerData={};
+
+
+    newPlayers.forEach(
+      (p,index)=>{
+
+        playerData[p.id]={
+
+          name:p.name,
+
+          score:p.score,
+
+          turnScore:p.turnScore||0,
+
+          order:index
+
+        };
+
+      }
+    );
+
+
+    const current =
+      newPlayers[currentIndex];
+
+
+    await update(
+      roomRef,
+      {
+
+        players:
+          playerData,
+
+        "state/currentPlayerId":
+          current?.id||null,
+
+        "state/throwNumber":
+          0,
+
+        "state/playerChanged":
+          false
+
+      }
+    );
+
+  };
+
+
+/* =====================================================
+   RESET
+===================================================== */
+
+window.firebaseResetGame =
+  async function(
+    resetPlayers,
+    limit
+  ){
+
+    if(!roomRef)
+      return;
+
+
+    const playerData={};
+
+
+    resetPlayers.forEach(
+      (p,index)=>{
+
+        playerData[p.id]={
+
+          name:p.name,
+
+          score:501,
+
+          turnScore:0,
+
+          order:index
+
+        };
+
+      }
+    );
+
+
+    const first =
+      resetPlayers[0];
+
+
+    await set(
+      roomRef,
+      {
+
+        gameType:501,
+
+        maxTurns:limit,
+
+        currentTurn:1,
+
+        players:
+          playerData,
+
+        state:{
+
+          currentPlayerId:
+            first?.id||null,
+
+          throwNumber:0,
+
+          lastScore:null,
+
+          lastLabel:"",
+
+          playerChanged:false,
+
+          showScoreEffect:false,
+
+          finished:false
+
+        }
+
+      }
+    );
+
+  };
+
+</script>
+
+</body>
+</html>
